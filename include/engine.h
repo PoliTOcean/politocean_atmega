@@ -1,10 +1,15 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+
+#define SATURATION_PWM_MAX 1900
+#define SATURATION_PWM_MIN 1100
+
 #include <stddef.h>
 #include <stdint.h>
 
 #include "politocean/serializable.h"
+#include "matlib.h"
 
 class ReferenceException {
   const char *_msg;
@@ -63,6 +68,8 @@ public:
                       double F_thrust[6]);
 
   int computePWM(double u);
+
+  
 };
 
 #endif // ENGINE_H

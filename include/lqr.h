@@ -4,7 +4,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "Matrix.h"
+#include "Matlib.h"
+
+using namespace matlib;
 
 typedef struct {
   uint8_t x, y;
@@ -50,6 +52,8 @@ class LQR {
 
   const double _dt;
   Matrix<6> _error;
+
+  
 
 public:
   LQR(double dt) : _dt(dt), _error(Matrix<6>::zeros()) {}

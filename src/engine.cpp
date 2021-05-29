@@ -1,50 +1,54 @@
 #include "engine.h"
 #include <math.h>
 #include <string.h>
+#include "Arduino.h"
+
+using namespace matlib;
 
 void Reference::toPower(const double perc[6], double vect_Forces[6]) {
-  static const double Gain[12] = {
-      0.6391799880331942,    0.50443995571260791,  0.6391799880331942,
-      0.50443995571260791,   0.1780734772993898,   0.46899584428269525,
-      0.057206610392085536,  0.038698589382881392, 0.10546713649209566,
-      0.0068670248575934522, 0.20076246365902112,  0.15844145651138775};
-
-  double a[36];
   double G[6];
   double q[6];
-  double d;
   int i;
+
+  static const Matrix<2, 6> Gain = {
+      0.6391799880331942,    0.6391799880331942, 0.1780734772993898, 
+      0.057206610392085536,  0.10546713649209566, 0.20076246365902112,
+      0.50443995571260791,   0.50443995571260791, 0.46899584428269525,
+      0.038698589382881392,  0.0068670248575934522, 0.15844145651138775};
 
   // we can extert a much higher force in this direction, since we don't have to
   // fight buoyancy computing m and q of the line that relates the % of the
   // joytick and the Ft here the percentage has been computed as 0-255. If you
   // want to get it from -100-100, substitute (255-128)->100, 127->100 Gain
   // positivi Gain negativi
+
+  //Serial.print("G: ");
   for (i = 0; i < 6; i++) {
     if (perc[i] >= 128.0) {
-      d = Gain[i << 1];
-      G[i] = d;
-      q[i] = d * 127.0;
+      G[i] = Gain(0, i);
+
+      q[i] = G[i] * 127.0;
     } else {
-      d = Gain[(i << 1) + 1];
-      G[i] = d;
-      q[i] = d * 127.0;
-    }
-  }
-
-  memset(&a[0], 0, 36U * sizeof(double));
-  for (i = 0; i < 6; i++) {
-    a[i + 6 * i] = G[i];
-  }
-
-  for (i = 0; i < 6; i++) {
-    d = 0.0;
-    for (int b_i = 0; b_i < 6; b_i++) {
-      d += a[i + 6 * b_i] * perc[b_i];
+      
+      G[i] = Gain(1, i);
+      q[i] = G[i] * 127.0;
     }
 
-    vect_Forces[i] = d - q[i];
+    //Serial.print(G[i]);
+    //Serial.print(" ");
+    vect_Forces[i] = G[i] * perc[i] - q[i];
   }
+
+  /*Serial.println();
+  Serial.print("q: ");
+
+  for(int j = 0; j<6; j++){
+    Serial.print(q[j]);
+    Serial.print(" ");
+  }
+
+  Serial.println();
+  */
 }
 
 /* Function Definitions */
@@ -210,13 +214,17 @@ int Engine::computePWM(double u) {
                                  1535.28905301730};
 
   int p_x = 0;
-  if (u < 0) {
+  if (u <= 0) {
     p_x = p_x1[0] * pow(u, 6) + p_x1[1] * pow(u, 5) + p_x1[2] * pow(u, 4) +
           p_x1[3] * pow(u, 3) + p_x1[4] * pow(u, 2) + p_x1[5] * u + p_x1[6];
   } else {
     p_x = p_x2[0] * pow(u, 6) + p_x2[1] * pow(u, 5) + p_x2[2] * pow(u, 4) +
           p_x2[3] * pow(u, 3) + p_x2[4] * pow(u, 2) + p_x2[5] * u + p_x2[6];
   }
+
+  if(p_x > SATURATION_PWM_MAX) p_x = SATURATION_PWM_MAX;
+  else if (p_x < SATURATION_PWM_MIN) p_x = SATURATION_PWM_MIN;
+
 
   return (int)p_x;
 }
