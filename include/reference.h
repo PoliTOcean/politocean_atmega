@@ -1,3 +1,4 @@
+<<<<<<< HEAD:include/engine.h
 #ifndef ENGINE_H
 #define ENGINE_H
 
@@ -11,6 +12,12 @@
 #include "politocean/serializable.h"
 #include "matlib.h"
 
+=======
+#include "politocean/serializable.h"
+#include <stddef.h>
+#include <stdint.h>
+
+>>>>>>> origin/master:include/reference.h
 class ReferenceException {
   const char *_msg;
 
@@ -42,6 +49,7 @@ public:
   inline void setPitch(uint8_t pitch) { _pitch = pitch; }
   inline void setYaw(uint8_t yaw) { _yaw = yaw; }
 
+<<<<<<< HEAD:include/engine.h
   inline void deserialize(const uint8_t *buffer, size_t size) {
     if (size != 6) {
       throw ReferenceException("Size don't match.");
@@ -73,3 +81,7 @@ public:
 };
 
 #endif // ENGINE_H
+=======
+  void deserialize(const uint8_t *buffer, size_t size);
+};
+>>>>>>> origin/master:include/reference.h
