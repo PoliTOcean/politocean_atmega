@@ -2,6 +2,7 @@
 #include "Matlib.h"
 #include "Engine.h"
 
+
 using namespace matlib;
 
 void print2(const Matrix<2> &a);
@@ -16,9 +17,6 @@ Matrix<2> input = {1, 1};
 Reference r = Reference{};
 Engine e = Engine{};
 
-Integrator<2> integrator(
-    Matrix<2>::zeros(),
-    0.01); // define an integrator with initial state [0 0] and step 0.01
 
 void setup() { 
   Serial.begin(9600); 
@@ -26,40 +24,44 @@ void setup() {
 }
 
 void loop() {
+
+  auto tStart = micros();
   //integrator.setInput(input);
   //integrator.step();
   //Matrix<2> newState = integrator.getState();
   //print2(newState);
   x = analogRead(xin1);
   y = analogRead(yin1);
-  Serial.print("Analog read: ");
-  Serial.print(x);
-  Serial.print(" ");
-  Serial.println(y);
+  //Serial.print("Analog read: ");
+  //Serial.print(x);
+  //Serial.print(" ");
+  //Serial.println(y);
   
   for(int i = 0; i < 6; i++){
     inputToPower[i] = 127.0;
   }
 
-  //inputToPower[5] = 255.0;
+
+
+  
   inputToPower[0] = (double)x * 255.0/ 1023.0;
   inputToPower[1] = (double)y * 255.0 / 1023.0;
 
+  inputToPower[1] = 255.0;
   
-  
-  Serial.print("Input: ");
+  //Serial.print("Input: ");
   for(int i = 0; i < 6; i++){
       if( abs(inputToPower[i] - 127.0) < 10.0){
          inputToPower[i] = 127.0;
       }
-      Serial.print(inputToPower[i]);
-      Serial.print(" ");
+      //Serial.print(inputToPower[i]);
+      //Serial.print(" ");
   }
-  Serial.println();
+  //Serial.println();
   
   
   r.toPower(inputToPower, outputToPower);
-
+  
   /*
   Serial.print("TOPOWER: ");
   for(int i = 0; i < 6; i++){
@@ -79,6 +81,9 @@ void loop() {
   }
   Serial.println();
   
+  
+  auto tEnd = micros();
+  Serial.print("TEnd-Tstart: "), Serial.println(tEnd-tStart);
   delay(200);
 }
 

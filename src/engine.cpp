@@ -8,8 +8,9 @@ using namespace matlib;
 void Reference::toPower(const double perc[6], double vect_Forces[6]) {
   double G[6];
   double q[6];
+  double p[6];
   int i;
-
+  
   static const Matrix<2, 6> Gain = {
       0.6391799880331942,    0.6391799880331942, 0.1780734772993898, 
       0.057206610392085536,  0.10546713649209566, 0.20076246365902112,
@@ -23,8 +24,17 @@ void Reference::toPower(const double perc[6], double vect_Forces[6]) {
   // positivi Gain negativi
 
   //Serial.print("G: ");
+  for(int i = 0; i < 6; i++){
+      if( abs(perc[i] - 127.0) < 10.0){
+         p[i] = 127.0;
+      }
+      else{
+        p[i] = perc[i];
+      }
+  }
+  
   for (i = 0; i < 6; i++) {
-    if (perc[i] >= 128.0) {
+    if (p[i] >= 128.0) {
       G[i] = Gain(0, i);
 
       q[i] = G[i] * 127.0;
@@ -36,7 +46,7 @@ void Reference::toPower(const double perc[6], double vect_Forces[6]) {
 
     //Serial.print(G[i]);
     //Serial.print(" ");
-    vect_Forces[i] = G[i] * perc[i] - q[i];
+    vect_Forces[i] = G[i] * p[i] - q[i];
   }
 
   /*Serial.println();
@@ -204,14 +214,22 @@ void Engine::addEnvironment(double Fx, double Fy, double Fz, double Mx,
 }
 
 int Engine::computePWM(double u) {
-  static const double p_x1[7] = {5.85047836804337e-06, 0.000534932248223446,
-                                 0.0188426982631957,   0.332359754817047,
-                                 3.32059076815697,     33.6082379110387,
-                                 1463.84980390593};
-  static const double p_x2[7] = {-2.07964488262876e-06, 0.000238770996705692,
-                                 -0.0104230998524322,   0.223304777305886,
-                                 -2.61239351684421,     28.5351019056098,
-                                 1535.28905301730};
+  static const double p_x1[7] = {2.946851474459042e-06,
+                                 2.836712230035537e-04,
+                                 0.010616408671209,
+                                 0.199901189414592,
+                                 2.176683385925845,
+                                 26.369976813191993,
+                                 1.465861832468260e+03};
+  static const double p_x2[7] = {-6.645745311609482e-07,
+                                  8.239563077992088e-05,
+                                  -0.003935635978640,
+                                  0.094003405635814,
+                                  -1.311652566479037,
+                                  20.751467116095448,
+                                  1.534679140574547e+03};
+
+
 
   int p_x = 0;
   if (u <= 0) {

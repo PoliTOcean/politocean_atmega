@@ -1,6 +1,6 @@
 #ifndef LQR_H
 #define LQR_H
-
+#include <Arduino.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -22,6 +22,7 @@ public:
 
 class LQR {
   static const size_t kDim = 6;
+  
 
   const Matrix<6, 6> Kq = {
       79.8353641734741,      7.71500505614214e-15,  -4.68307091084881e-16,
@@ -50,26 +51,40 @@ class LQR {
       4.02777446645080e-16,  5.12100121297323e-15,  -1.45645846789405e-14,
       -4.83967924327114e-16, -4.11135934027878e-17, -1.18762344011595};
 
-  const double _dt;
-  Matrix<6> _error;
-
+  Integrator<6> integrator;
+  
+  
+    
   
 
 public:
-  LQR(double dt) : _dt(dt), _error(Matrix<6>::zeros()) {}
+  LQR(){
+    integrator = Integrator<6>(
+    Matrix<6>::zeros(),
+    0.1); // define an integrator with initial state [0 0] and step 0.1
+  }
 
   void compute(const Matrix<6> &measures) {
+    
+
     Matrix<6> error = -measures;
 
-    Matrix<6> integral = error;
-    integral = (integral - _error) * (_dt / 2);
-
-    _error = error;
+    integrator.setInput(error);
+    integrator.step();
 
     Matrix<6> outKx = Kx * measures;
-    Matrix<6> outKq = Kq * integral;
+    Matrix<6> outKq = Kq * integrator.getState();;
 
     Matrix<6> sum = -(outKq + outKx);
+  }
+
+  Matrix<6, 1> measurements(Matrix<6, 1> imuMeasurements, Matrix<6,1> commands){
+    for(int i = 0; i < 6; i++){
+      if( abs(commands(i, 0) - 127.0) > 10.0){
+         imuMeasurements(i, 0) = 0.0;
+      }
+    }
+    return imuMeasurements;
   }
 };
 
