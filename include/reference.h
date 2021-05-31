@@ -1,10 +1,6 @@
-#ifndef ENGINE_H
-#define ENGINE_H
-
+#include "politocean/serializable.h"
 #include <stddef.h>
 #include <stdint.h>
-
-#include "politocean/serializable.h"
 
 class ReferenceException {
   const char *_msg;
@@ -37,32 +33,5 @@ public:
   inline void setPitch(uint8_t pitch) { _pitch = pitch; }
   inline void setYaw(uint8_t yaw) { _yaw = yaw; }
 
-  inline void deserialize(const uint8_t *buffer, size_t size) {
-    if (size != 6) {
-      throw ReferenceException("Size don't match.");
-    }
-
-    _x = buffer[0];
-    _y = buffer[1];
-    _z = buffer[2];
-    _roll = buffer[3];
-    _pitch = buffer[4];
-    _yaw = buffer[5];
-  }
-
-  void toPower(const double perc[6], double vect_Forces[6]);
+  void deserialize(const uint8_t *buffer, size_t size);
 };
-
-class Engine {
-public:
-  void distribute(const double vect_Forces[6], double Ftx, double Fty,
-                  double Ftz, double Mtx, double Mty, double Mtz, double y[7]);
-
-  void addEnvironment(double Fx, double Fy, double Fz, double Mx, double My,
-                      double Mz, double roll, double pitch, double yaw,
-                      double F_thrust[6]);
-
-  int computePWM(double u);
-};
-
-#endif // ENGINE_H
