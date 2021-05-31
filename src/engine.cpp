@@ -73,36 +73,35 @@ void Reference::toPower(const double perc[6], double vect_Forces[6]) {
  *                double y[7]
  * Return Type  : void
  */
-void Engine::distribute(const double vect_Forces[6], double Ftx, double Fty,
-                        double Ftz, double Mtx, double Mty, double Mtz,
+void Engine::distribute(const double vect_Forces[6], Matrix<6,1> torques,
                         double y[7]) {
-  double F1_Ftx;
-  double F1_Fty;
-  double F1_Mtz;
-  double F2_Mtz;
-  double F7_Ftx;
-  double y_tmp;
-  Ftx += vect_Forces[0];
-  Fty += vect_Forces[1];
-  Ftz += vect_Forces[2];
-  Mtx += vect_Forces[3];
-  Mty += vect_Forces[4];
-  Mtz += vect_Forces[5];
+  double F1_Ftx = 0.0;
+  double F1_Fty = 0.0;
+  double F1_Mtz = 0.0;
+  double F2_Mtz = 0.0;
+  double F7_Ftx = 0.0;
+  double y_tmp = 0.0;
+  torques(0, 0) += vect_Forces[0];
+  torques(1, 0) += vect_Forces[1];
+  torques(2, 0) += vect_Forces[2];
+  torques(3, 0) += vect_Forces[3];
+  torques(4, 0) += vect_Forces[4];
+  torques(5, 0) += vect_Forces[5];
 
   /* Due to Ftx */
-  F7_Ftx = -0.1698 * Ftx;
-  F1_Ftx = 0.3536 * Ftx;
+  F7_Ftx = -0.1698 * torques(0, 0);
+  F1_Ftx = 0.3536 * torques(0, 0);
 
   /* Due to Fty */
-  F1_Fty = -Fty / 2.8284271247461903;
+  F1_Fty = -torques(1, 0) / 2.8284271247461903;
 
   /* Due to Ftz */
   /* Due to Mtx */
   /* VERIFICARE */
   /* Due to Mty */
   /* Due to Mz */
-  F1_Mtz = -1.08325 * Mtz;
-  F2_Mtz = 1.12563 * Mtz;
+  F1_Mtz = -1.08325 * torques(5, 0);
+  F2_Mtz = 1.12563 * torques(5, 0);
 
   /* ???? */
   y_tmp = F1_Ftx + F1_Fty;
@@ -111,106 +110,54 @@ void Engine::distribute(const double vect_Forces[6], double Ftx, double Fty,
   y[1] = F1_Ftx + F2_Mtz;
   y[2] = F1_Ftx - F2_Mtz;
   y[3] = y_tmp - F1_Mtz;
-  y[4] = ((0.000201 * Fty + 0.380273 * Ftz) + 0.0049 * Mtx) + -3.0386 * Mty;
-  y[5] = (((-F7_Ftx + -0.110565 * Fty) + 0.313408 * Ftz) + -2.57849 * Mtx) +
-         1.52721 * Mty;
-  y[6] = (((F7_Ftx + 0.11364 * Fty) + 0.306319 * Ftz) + 2.5739 * Mtx) +
-         1.5114 * Mty;
+  y[4] = ((0.000201 * torques(1, 0) + 0.380273 * torques(2, 0)) + 0.0049 * torques(3, 0)) + -3.0386 * torques(4, 0);
+  y[5] = (((-F7_Ftx + -0.110565 * torques(1, 0)) + 0.313408 * torques(2, 0)) + -2.57849 * torques(3, 0)) +
+         1.52721 * torques(4, 0);
+  y[6] = (((F7_Ftx + 0.11364 * torques(1, 0)) + 0.306319 * torques(2, 0)) + 2.5739 * torques(3, 0)) +
+         1.5114 * torques(4, 0);
 }
 
-void Engine::addEnvironment(double Fx, double Fy, double Fz, double Mx,
-                            double My, double Mz, double roll, double pitch,
-                            double yaw, double F_thrust[6]) {
-  double dv[48];
-  double b_Fx[8];
-  double B_f_tmp;
-  double b_B_f_tmp;
-  double c_B_f_tmp;
-  double d_B_f_tmp;
-  double e_B_f_tmp;
+Matrix<6,1> Engine::addEnvironment(Matrix<6,1> torques,  double roll, double pitch,
+                            double yaw) {
+    
+// accelerazione di gravità
+double g= 9.80666;        // [(kg*m)/(s^2)]
 
-  //  cos(45) e sin(45)= angoli asse dei motori
-  //  accelerazione di gravità
-  //  [(kg*m)/(s^2)]
-  //  massa ROV
-  //  [kg]
-  //  volume ROV
-  //  [m^3]
-  //  rho=997;  % [kg/m^3]
-  //  Distanza centro di massa- centro di galleggiamento VERIFICARE!!
-  //  [m]
-  //  [m]
-  //  [m]
-  B_f_tmp = cos(yaw);
-  b_B_f_tmp = sin(pitch);
-  c_B_f_tmp = sin(roll);
-  d_B_f_tmp = cos(roll);
-  e_B_f_tmp = cos(pitch);
-  dv[0] = -1.0;
-  dv[6] = 0.0;
-  dv[12] = 0.0;
-  dv[18] = 0.0;
-  dv[24] = 0.0;
-  dv[30] = 0.0;
-  dv[36] = -106.2061278 * B_f_tmp * b_B_f_tmp;
-  dv[42] = 106.2061278 * B_f_tmp * b_B_f_tmp;
-  dv[1] = 0.0;
-  dv[7] = -1.0;
-  dv[13] = 0.0;
-  dv[19] = 0.0;
-  dv[25] = 0.0;
-  dv[31] = 0.0;
-  dv[37] = 106.2061278 * cos(yaw) * c_B_f_tmp;
-  dv[43] = -106.2061278 * cos(yaw) * c_B_f_tmp;
-  dv[2] = 0.0;
-  dv[8] = 0.0;
-  dv[14] = -1.0;
-  dv[20] = 0.0;
-  dv[26] = 0.0;
-  dv[32] = 0.0;
-  dv[38] = 106.2061278 * d_B_f_tmp * e_B_f_tmp;
-  dv[44] = -106.2061278 * d_B_f_tmp * e_B_f_tmp;
-  dv[3] = 0.0;
-  dv[9] = 0.0;
-  dv[15] = 0.0;
-  dv[21] = -1.0;
-  dv[27] = 0.0;
-  dv[33] = 0.0;
-  dv[39] = 0.0;
-  dv[45] = -4.9658456175244785 * e_B_f_tmp * c_B_f_tmp;
-  dv[4] = 0.0;
-  dv[10] = 0.0;
-  dv[16] = 0.0;
-  dv[22] = 0.0;
-  dv[28] = -1.0;
-  dv[34] = 0.0;
-  dv[40] = 0.0;
-  dv[46] = -4.9658456175244785 * b_B_f_tmp -
-           6.6024577078728246 * d_B_f_tmp * e_B_f_tmp;
-  dv[5] = 0.0;
-  dv[11] = 0.0;
-  dv[17] = 0.0;
-  dv[23] = 0.0;
-  dv[29] = 0.0;
-  dv[35] = -1.0;
-  dv[41] = 0.0;
-  dv[47] = 6.6024577078728246 * e_B_f_tmp * c_B_f_tmp;
-  b_Fx[0] = Fx;
-  b_Fx[1] = Fy;
-  b_Fx[2] = Fz;
-  b_Fx[3] = Mx;
-  b_Fx[4] = My;
-  b_Fx[5] = Mz;
-  b_Fx[6] = 1.0;
-  b_Fx[7] = 1.0;
-  for (int i = 0; i < 6; i++) {
-    B_f_tmp = 0.0;
-    for (int i1 = 0; i1 < 8; i1++) {
-      B_f_tmp += dv[i + 6 * i1] * b_Fx[i1];
-    }
+// massa ROV
+double m= 9.94104;          // [kg]
 
-    F_thrust[i] = B_f_tmp;
-  }
+
+// volume ROV
+double V= 6544278.18/(1000^3);     // [m^3]
+
+// rho=997;  % [kg/m^3]
+double rho=997;
+
+double buoyancy=rho*g*V;
+
+// Distanza centro di massa- centro di galleggiamento VERIFICARE!!
+double xb= 69.55/1000;     // [m]
+double yb=1.01/1000;       // [m]
+double zb= 52.31/1000;     // [m]
+
+
+
+Matrix<6,8> B_f= {-1, 0, 0, 0, 0, 0, -m*g*cos(yaw)*sin(pitch), m*g*cos(yaw)*sin(pitch),
+    0, -1, 0, 0, 0, 0,  m*g*cos(yaw)*sin(roll), -m*g*cos(yaw)*sin(roll),
+    0, 0, -1, 0, 0, 0, m*g*cos(roll)*cos(pitch), -m*g*cos(roll)*cos(pitch),
+    0, 0, 0, -1, 0, 0, 0, -buoyancy*zb*cos(pitch)*sin(roll),
+    0, 0, 0, 0, -1, 0, 0, - buoyancy*zb*sin(pitch)-buoyancy*xb*cos(roll)*cos(pitch),
+    0, 0, 0, 0, 0, -1,0, buoyancy*xb*cos(pitch)*sin(roll)};
+
+Matrix<8, 1> T = {torques(0, 0),
+                  torques(1, 0),
+                  torques(2, 0),
+                  torques(3, 0),
+                  torques(4, 0),
+                  torques(5, 0), 1, 1};
+
+Matrix<6, 1> F_thrust = B_f*T;
+return F_thrust;
 }
 
 int Engine::computePWM(double u) {

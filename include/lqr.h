@@ -58,13 +58,9 @@ class LQR {
   
 
 public:
-  LQR(){
-    integrator = Integrator<6>(
-    Matrix<6>::zeros(),
-    0.1); // define an integrator with initial state [0 0] and step 0.1
-  }
+  LQR() : integrator(Matrix<6>::zeros(), 0.1) {}
 
-  void compute(const Matrix<6> &measures) {
+  Matrix<6, 1> compute(const Matrix<6> &measures) {
     
 
     Matrix<6> error = -measures;
@@ -76,9 +72,15 @@ public:
     Matrix<6> outKq = Kq * integrator.getState();;
 
     Matrix<6> sum = -(outKq + outKx);
+
+    
+    return sum;
   }
 
   Matrix<6, 1> measurements(Matrix<6, 1> imuMeasurements, Matrix<6,1> commands){
+    
+    
+
     for(int i = 0; i < 6; i++){
       if( abs(commands(i, 0) - 127.0) > 10.0){
          imuMeasurements(i, 0) = 0.0;

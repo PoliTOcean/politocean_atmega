@@ -1,36 +1,40 @@
 #include "Arduino.h"
-<<<<<<< HEAD
 #include "Matlib.h"
-#include "Engine.h"
-
-=======
-#include "MPU6050.h"
-#include "SPI.h"
 #include "Wire.h"
->>>>>>> origin/master
+#include "Engine.h"
+#include "lqr.h"
+#include "MPU6050.h"
+
+using namespace matlib;
 
 volatile bool received = false, reset = false;
 volatile byte c;
 volatile int currentAxis = 0;
 volatile byte buffer[6], seq[6] = {1, 2, 3, 4, 5, 6};
 
-<<<<<<< HEAD
 void print2(const Matrix<2> &a);
 int xin1 = A0;
 int yin1 = A1;
 int x, y;
-double inputToPower[6] = {};
-double outputToPower[6] = {};
-double outputDistribute[7] = {};
-int outputPWM[7] = {};
+double inputToPower[6];
+double outputToPower[6];
+double outputDistribute[7];
+int outputPWM[7];
 Matrix<2> input = {1, 1};
-Reference r = Reference{};
-Engine e = Engine{};
-
+Reference r;
+Engine e;
+LQR l;
+MPU6050 mpu6050;
+cartesian_t acc, gyro;
+Integrator<6> integratedMeasurements(
+    Matrix<6>::zeros(),
+    0.01);
 
 void setup() { 
+  Wire.begin();
   Serial.begin(9600); 
-  
+  mpu6050.begin();
+  mpu6050.calibrate();
 }
 
 void loop() {
@@ -40,6 +44,16 @@ void loop() {
   //integrator.step();
   //Matrix<2> newState = integrator.getState();
   //print2(newState);
+  mpu6050.readGyroscope(&gyro);
+  mpu6050.readAccelerometer(&acc);
+
+  //Matrix<6,1> read = {acc.x, acc.y, acc.z, gyro.x, gyro.y, gyro.z};
+  Matrix<6,1> read = {0, 0, 0, 0, 0, 0};
+
+  integratedMeasurements.setInput(read);
+  integratedMeasurements.step();
+  Matrix<6,1> tmpMeasures = integratedMeasurements.getState();
+
   x = analogRead(xin1);
   y = analogRead(yin1);
   //Serial.print("Analog read: ");
@@ -57,7 +71,7 @@ void loop() {
   inputToPower[0] = (double)x * 255.0/ 1023.0;
   inputToPower[1] = (double)y * 255.0 / 1023.0;
 
-  inputToPower[1] = 255.0;
+  //inputToPower[1] = 255.0;
   
   //Serial.print("Input: ");
   for(int i = 0; i < 6; i++){
@@ -69,7 +83,14 @@ void loop() {
   }
   //Serial.println();
   
-  
+  Matrix<6,1> commands = {inputToPower[0], inputToPower[1], inputToPower[2], 
+                          inputToPower[3], inputToPower[4], inputToPower[5]};
+  Matrix<6,1> computeResults = l.compute(l.measurements(tmpMeasures, commands));
+  Matrix<6,1> addEnvironmentResults = e.addEnvironment(computeResults, 
+                                                       tmpMeasures(3,0), 
+                                                       tmpMeasures(4, 0), 
+                                                       tmpMeasures(5, 0));
+
   r.toPower(inputToPower, outputToPower);
   
   /*
@@ -82,7 +103,7 @@ void loop() {
   Serial.println();
   */
   
-  e.distribute(outputToPower, 0, 0, 0, 0, 0, 0, outputDistribute);
+  e.distribute(outputToPower, addEnvironmentResults , outputDistribute);
   Serial.print("PWM: ");
   for(int i = 0; i < 7; i++){
       outputPWM[i] = e.computePWM(outputDistribute[i]);
@@ -95,53 +116,6 @@ void loop() {
   auto tEnd = micros();
   Serial.print("TEnd-Tstart: "), Serial.println(tEnd-tStart);
   delay(200);
-=======
-void printBuffer(volatile byte *b, size_t size);
-
-MPU6050 mpu;
-cartesian_t acc, gyro;
-cartesian_t accOffset = {.x = 5115, .y = 419, .z = 533},
-            gyroOffset = {.x = -21, .y = 592, .z = 584};
-
-void setup() {
-  Serial.begin(9600);
-  mpu.begin();
-
-  Serial.println("Calibrating...");
-  mpu.calibrate();
-  Serial.println(" Ok.");
-
-  pinMode(MISO, OUTPUT);
-  SPCR |= _BV(SPE);
-  SPI.attachInterrupt();
-}
-
-void loop() {
-  mpu.readAccelerometer(&acc);
-  Serial.print("Accelerometer: "), Serial.print(acc.x), Serial.print(" "),
-      Serial.print(acc.y), Serial.print(" "), Serial.println(acc.z);
-  mpu.readGyroscope(&gyro);
-  Serial.print("Gyroscope: "), Serial.print(gyro.x), Serial.print(" "),
-      Serial.print(gyro.y), Serial.print(" "), Serial.println(gyro.z);
-
-  delay(1000);
-}
-
-ISR(SPI_STC_vect) {
-  c = SPDR;
-
-  if (c == 0xff) {
-    reset = true;
-    currentAxis = 0;
-  } else {
-    buffer[currentAxis] = c;
-
-    if (++currentAxis >= 6) {
-      currentAxis = 0;
-      received = true;
-    }
-  }
->>>>>>> origin/master
 }
 
 void printBuffer(volatile byte *b, size_t size) {

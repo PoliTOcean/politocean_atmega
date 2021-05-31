@@ -9,7 +9,9 @@
 #include <stdint.h>
 
 #include "politocean/serializable.h"
-#include "matlib.h"
+#include "Matlib.h"
+
+using namespace matlib;
 
 class ReferenceException {
   const char *_msg;
@@ -60,12 +62,10 @@ public:
 
 class Engine {
 public:
-  void distribute(const double vect_Forces[6], double Ftx, double Fty,
-                  double Ftz, double Mtx, double Mty, double Mtz, double y[7]);
+  void distribute(const double vect_Forces[6], Matrix<6,1> torques,
+                        double y[7]);
 
-  void addEnvironment(double Fx, double Fy, double Fz, double Mx, double My,
-                      double Mz, double roll, double pitch, double yaw,
-                      double F_thrust[6]);
+  Matrix<6,1> addEnvironment(Matrix<6,1>,  double roll, double pitch, double yaw);
 
   int computePWM(double u);
 
@@ -73,5 +73,3 @@ public:
 };
 
 #endif // ENGINE_H
-  //void deserialize(const uint8_t *buffer, size_t size);
-

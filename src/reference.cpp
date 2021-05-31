@@ -1,5 +1,5 @@
 #include "reference.h"
-
+/*
 void Reference::deserialize(const uint8_t *buffer, size_t size) {
   if (size != 6) {
     throw ReferenceException("Size don't match.");
@@ -12,3 +12,5 @@ void Reference::deserialize(const uint8_t *buffer, size_t size) {
   _pitch = buffer[4];
   _yaw = buffer[5];
 }
+
+*/
