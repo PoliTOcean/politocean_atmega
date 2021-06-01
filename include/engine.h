@@ -67,7 +67,7 @@ public:
 
   Matrix<6,1> addEnvironment(Matrix<6,1>,  double roll, double pitch, double yaw);
 
-  int computePWM(double u);
+  void computePWM(double u[7], int outputPWM[7]);
 
   
 };

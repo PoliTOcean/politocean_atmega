@@ -60,10 +60,10 @@ void loop() {
 
 
   
-  //inputToPower[0] = (double)x * 255.0/ 1023.0;
-  //inputToPower[1] = (double)y * 255.0 / 1023.0;
+  inputToPower[0] = (double)x * 255.0/ 1023.0;
+  inputToPower[1] = (double)y * 255.0 / 1023.0;
 
-  inputToPower[1] = 255.0;
+  inputToPower[0] = 255.0;
   
   for(int i = 0; i < 6; i++){
       if( abs(inputToPower[i] - 127.0) < 10.0){
@@ -81,9 +81,18 @@ void loop() {
                                                        tmpMeasures(4, 0), 
                                                        tmpMeasures(5, 0)), 
                                                        outputDistribute);
-  
+
+  int outputPWM[7];
+  e.computePWM(outputDistribute, outputPWM);
   auto tEnd = micros();
   Serial.print("TEnd-Tstart: "), Serial.println(tEnd-tStart);
+  Serial.print("PWM: ");
+  
+  for (int i= 0; i < 7; i++){
+    Serial.print(outputPWM[i]);
+    Serial.print(" ");
+  }
+  Serial.println();
   delay(200);
 }
 

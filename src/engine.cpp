@@ -186,7 +186,7 @@ Serial.print("Yaw "), Serial.print(yaw);
 return F_thrust;
 }
 
-int Engine::computePWM(double u) {
+void Engine::computePWM(double u[7], int outputPWM[7]) {
   static const double p_x1[7] = {2.946851474459042e-06,
                                  2.836712230035537e-04,
                                  0.010616408671209,
@@ -204,18 +204,17 @@ int Engine::computePWM(double u) {
 
 
 
-  int p_x = 0;
-  if (u <= 0) {
-    p_x = p_x1[0] * pow(u, 6) + p_x1[1] * pow(u, 5) + p_x1[2] * pow(u, 4) +
-          p_x1[3] * pow(u, 3) + p_x1[4] * pow(u, 2) + p_x1[5] * u + p_x1[6];
-  } else {
-    p_x = p_x2[0] * pow(u, 6) + p_x2[1] * pow(u, 5) + p_x2[2] * pow(u, 4) +
-          p_x2[3] * pow(u, 3) + p_x2[4] * pow(u, 2) + p_x2[5] * u + p_x2[6];
+  
+  for(int i = 0; i < 7; i++){
+      if (u[i] <= 0) {
+          outputPWM[i] = (int)(p_x1[0] * pow(u[i], 6) + p_x1[1] * pow(u[i], 5) + p_x1[2] * pow(u[i], 4) +
+          p_x1[3] * pow(u[i], 3) + p_x1[4] * pow(u[i], 2) + p_x1[5] * u[i] + p_x1[6]);
+      } else {
+          outputPWM[i] = (int)(p_x2[0] * pow(u[i], 6) + p_x2[1] * pow(u[i], 5) + p_x2[2] * pow(u[i], 4) +
+          p_x2[3] * pow(u[i], 3) + p_x2[4] * pow(u[i], 2) + p_x2[5] * u[i] + p_x2[6]);
+      }
+
+      if(outputPWM[i] > SATURATION_PWM_MAX) outputPWM[i] = SATURATION_PWM_MAX;
+      else if (outputPWM[i] < SATURATION_PWM_MIN) outputPWM[i] = SATURATION_PWM_MIN;
   }
-
-  if(p_x > SATURATION_PWM_MAX) p_x = SATURATION_PWM_MAX;
-  else if (p_x < SATURATION_PWM_MIN) p_x = SATURATION_PWM_MIN;
-
-
-  return (int)p_x;
 }
