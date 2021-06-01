@@ -128,7 +128,7 @@ double m= 9.94104;          // [kg]
 
 
 // volume ROV
-double V= 6544278.18/(1000^3);     // [m^3]
+double V= 6544278.18/pow(1000.0,3);     // [m^3]
 
 // rho=997;  % [kg/m^3]
 double rho=997;
@@ -157,6 +157,32 @@ Matrix<8, 1> T = {torques(0, 0),
                   torques(5, 0), 1, 1};
 
 Matrix<6, 1> F_thrust = B_f*T;
+
+/*
+Serial.println("B_f");
+for(int i = 0; i < 6; i++){
+  for(int j = 0; j< 8; j++){
+    Serial.print(B_f(i, j));
+    Serial.print(" ");
+  }
+  Serial.println();
+}
+
+Serial.print("Formula ");
+Serial.println(V);
+
+
+Serial.print("F_thrust: ");
+    for(int i = 0; i < 6; i++){
+      Serial.print(torques(i, 0));
+      Serial.print(" ");
+    }
+    Serial.println();
+Serial.print("Roll "), Serial.print(roll),
+Serial.print("Pitch "), Serial.print(pitch), 
+Serial.print("Yaw "), Serial.print(yaw);
+*/
+
 return F_thrust;
 }
 

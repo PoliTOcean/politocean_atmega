@@ -72,7 +72,6 @@ public:
     Matrix<6> outKq = Kq * integrator.getState();;
 
     Matrix<6> sum = -(outKq + outKx);
-
     
     return sum;
   }

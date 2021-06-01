@@ -40,10 +40,6 @@ void setup() {
 void loop() {
 
   auto tStart = micros();
-  //integrator.setInput(input);
-  //integrator.step();
-  //Matrix<2> newState = integrator.getState();
-  //print2(newState);
   mpu6050.readGyroscope(&gyro);
   mpu6050.readAccelerometer(&acc);
 
@@ -56,10 +52,6 @@ void loop() {
 
   x = analogRead(xin1);
   y = analogRead(yin1);
-  //Serial.print("Analog read: ");
-  //Serial.print(x);
-  //Serial.print(" ");
-  //Serial.println(y);
   
   for(int i = 0; i < 6; i++){
     inputToPower[i] = 127.0;
@@ -68,50 +60,27 @@ void loop() {
 
 
   
-  inputToPower[0] = (double)x * 255.0/ 1023.0;
-  inputToPower[1] = (double)y * 255.0 / 1023.0;
+  //inputToPower[0] = (double)x * 255.0/ 1023.0;
+  //inputToPower[1] = (double)y * 255.0 / 1023.0;
 
-  //inputToPower[1] = 255.0;
+  inputToPower[1] = 255.0;
   
-  //Serial.print("Input: ");
   for(int i = 0; i < 6; i++){
       if( abs(inputToPower[i] - 127.0) < 10.0){
          inputToPower[i] = 127.0;
       }
-      //Serial.print(inputToPower[i]);
-      //Serial.print(" ");
   }
-  //Serial.println();
   
   Matrix<6,1> commands = {inputToPower[0], inputToPower[1], inputToPower[2], 
                           inputToPower[3], inputToPower[4], inputToPower[5]};
-  Matrix<6,1> computeResults = l.compute(l.measurements(tmpMeasures, commands));
-  Matrix<6,1> addEnvironmentResults = e.addEnvironment(computeResults, 
-                                                       tmpMeasures(3,0), 
-                                                       tmpMeasures(4, 0), 
-                                                       tmpMeasures(5, 0));
 
   r.toPower(inputToPower, outputToPower);
   
-  /*
-  Serial.print("TOPOWER: ");
-  for(int i = 0; i < 6; i++){
-
-      Serial.print(outputToPower[i]);
-      Serial.print(" ");
-  }
-  Serial.println();
-  */
-  
-  e.distribute(outputToPower, addEnvironmentResults , outputDistribute);
-  Serial.print("PWM: ");
-  for(int i = 0; i < 7; i++){
-      outputPWM[i] = e.computePWM(outputDistribute[i]);
-      Serial.print(outputPWM[i]);
-      Serial.print(" ");
-  }
-  Serial.println();
-  
+  e.distribute(outputToPower, e.addEnvironment(l.compute(l.measurements(tmpMeasures, commands)), 
+                                                       tmpMeasures(3,0), 
+                                                       tmpMeasures(4, 0), 
+                                                       tmpMeasures(5, 0)), 
+                                                       outputDistribute);
   
   auto tEnd = micros();
   Serial.print("TEnd-Tstart: "), Serial.println(tEnd-tStart);
